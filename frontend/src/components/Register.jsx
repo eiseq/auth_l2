@@ -28,7 +28,7 @@ const Register = () => {
     };
 
     const handleGeneratePassword = () => {
-        const password = generateRandomPassword(16);
+        const password = generateRandomPassword(8);
         setFormData({ ...formData, password, confirmPassword: password });
     };
 
