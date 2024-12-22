@@ -7,28 +7,42 @@ import '../assets/styles/global.css';
 
 const UserProfile = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [userData, setUserData] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [newValue, setNewValue] = useState('');
     const [error, setError] = useState('');
+    const uid = localStorage.getItem('uid');
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/auth/user/${id}`);
-                setUserData(response.data);
+                if (uid !== null) {
+                    const response = await axios.get(`http://localhost:5000/api/auth/user/${id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${uid}`
+                        }
+                    });
+                    setUserData(response.data);
+                } else {
+                    navigate('/register')
+                }
             } catch (error) {
                 console.error('Error fetching user data:', error);
             }
         };
 
         fetchUserData();
-    }, [id]);
+    }, [id, uid, navigate]);
 
     const handleEditClick = (field) => {
-        setEditingField(field);
-        setNewValue(userData[field]);
-        setError('');
+        if (uid !== null) {
+            setEditingField(field);
+            setNewValue(userData[field]);
+            setError('');
+        } else {
+            navigate('/register')
+        }
     };
 
     const handleSaveClick = async () => {
@@ -39,17 +53,26 @@ const UserProfile = () => {
             setError(Object.values(validationErrors).join(', '));
             return;
         }
-
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/update-user', {
-                id,
-                field: editingField,
-                value: newValue,
-            });
-            setUserData({ ...userData, [editingField]: newValue });
-            setEditingField(null);
-            setNewValue('');
-            setError('');
+            if (uid !== null) {
+                const response = await axios.post('http://localhost:5000/api/auth/update-user', {
+                    id,
+                    field: editingField,
+                    value: newValue,
+                    uid
+                },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${uid}`
+                        }
+                    });
+                setUserData({ ...userData, [editingField]: newValue });
+                setEditingField(null);
+                setNewValue('');
+                setError('');
+            } else {
+                navigate('/register');
+            }
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
                 setError(Object.values(error.response.data.details).join(', '));
