@@ -2,8 +2,7 @@ const { createUserWithEmailAndPassword } = require('firebase/auth');
 const { doc, setDoc } = require('firebase/firestore');
 const { auth, db } = require('../config/firebaseConfig');
 const { uploadImage } = require('../utils/uploadImage');
-const { validateFields } = require('../utils/validation');
-const { logInfo, logError } = require('../utils/logger');
+const { validateFields } = require('../utils/validation.js');
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
@@ -13,7 +12,6 @@ const registerUser = async (req, res) => {
 
     const validationErrors = validateFields(req.body);
     if (Object.keys(validationErrors).length > 0) {
-        logError('Validation failed', validationErrors);
         return res.status(400).json({ error: 'Validation failed', details: validationErrors });
     }
 
@@ -34,10 +32,8 @@ const registerUser = async (req, res) => {
             avatar: avatarUrl,
         });
 
-        logInfo('User registered successfully', { userId: user.uid });
         res.status(201).json({ message: 'Registration successful' });
     } catch (error) {
-        logError('Error registering user', error);
         res.status(500).json({ error: 'Error registering user', details: error.message });
     }
 };

@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
-import { validateFields, generateRandomPassword, uploadImage } from '../utils';
 import { useNavigate } from 'react-router-dom';
-
-const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
+import axios from 'axios';
+import '../assets/styles/global.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -18,7 +14,7 @@ const Register = () => {
         gender: '',
         avatar: null,
     });
-    const [errors, setErrors] = useState({});
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -30,68 +26,94 @@ const Register = () => {
         setFormData({ ...formData, avatar: e.target.files[0] });
     };
 
+    const handleGeneratePassword = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_.:;';
+        let password = '';
+        const length = 16;
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setFormData({ ...formData, password, confirmPassword: password });
+    };
+
     const handleRegister = async () => {
-        const validationErrors = validateFields(formData);
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+        const { email, password, confirmPassword } = formData;
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
             return;
         }
 
-        const { email, password, confirmPassword, name, nickname, phone, gender, avatar } = formData;
-
-        if (password !== confirmPassword) {
-            alert('Passwords do not match');
-            return;
+        const formDataToSend = new FormData();
+        formDataToSend.append('email', email);
+        formDataToSend.append('password', password);
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('nickname', formData.nickname);
+        formDataToSend.append('phone', formData.phone);
+        formDataToSend.append('gender', formData.gender);
+        if (formData.avatar) {
+            formDataToSend.append('avatar', formData.avatar);
         }
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            let avatarUrl = DEFAULT_AVATAR_URL;
-            if (avatar) {
-                avatarUrl = await uploadImage(avatar);
-            }
-
-            await setDoc(doc(db, 'users', user.uid), {
-                name,
-                nickname,
-                phone,
-                gender,
-                avatar: avatarUrl,
+            await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-
-            navigate('/', { state: { avatarUrl } });
+            navigate('/');
         } catch (error) {
-            alert('Error registering user: ' + error.message);
+            if (error.response && error.response.data && error.response.data.details) {
+                setError(Object.values(error.response.data.details).join(', '));
+            } else {
+                setError('Error registering user: ' + error.message);
+            }
         }
     };
 
     return (
-        <div>
-            <h2>Register</h2>
-            <input type="email" placeholder="Email" name="email" value={formData.email} onChange={handleChange} />
-            {errors.email && <p>{errors.email}</p>}
-            <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} />
-            {errors.password && <p>{errors.password}</p>}
-            <input type="password" placeholder="Confirm Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
-            {errors.confirmPassword && <p>{errors.confirmPassword}</p>}
-            <input type="text" placeholder="Name" name="name" value={formData.name} onChange={handleChange} />
-            {errors.name && <p>{errors.name}</p>}
-            <input type="text" placeholder="Nickname" name="nickname" value={formData.nickname} onChange={handleChange} />
-            {errors.nickname && <p>{errors.nickname}</p>}
-            <input type="text" placeholder="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-            {errors.phone && <p>{errors.phone}</p>}
-            <select name="gender" value={formData.gender} onChange={handleChange}>
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-            </select>
-            {errors.gender && <p>{errors.gender}</p>}
-            <input type="file" onChange={handleFileChange} />
-            <button onClick={handleRegister}>Register</button>
-            <button onClick={() => setFormData({ ...formData, password: generateRandomPassword(16) })}>Generate Random Password</button>
+        <div className="register">
+            <h2 className="register__title">Register</h2>
+            {error && <p className="register__error">{error}</p>}
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="email">Email</label>
+                <input className="form-group__input" type="email" id="email" name="email" value={formData.email} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="password">Password</label>
+                <input className="form-group__input" type="password" id="password" name="password" value={formData.password} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="confirmPassword">Confirm Password</label>
+                <input className="form-group__input" type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
+            </div>
+            <button className="btn btn--secondary" onClick={handleGeneratePassword}>Generate Random Password</button>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="name">Name</label>
+                <input className="form-group__input" type="text" id="name" name="name" value={formData.name} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="nickname">Nickname</label>
+                <input className="form-group__input" type="text" id="nickname" name="nickname" value={formData.nickname} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="phone">Phone</label>
+                <input className="form-group__input" type="text" id="phone" name="phone" value={formData.phone} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="gender">Gender</label>
+                <select className="form-group__input" id="gender" name="gender" value={formData.gender} onChange={handleChange}>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div className="form-group">
+                <label className="form-group__label" htmlFor="avatar">Avatar</label>
+                <input className="form-group__input" type="file" id="avatar" onChange={handleFileChange} />
+            </div>
+            <button className="btn" onClick={handleRegister}>Register</button>
         </div>
     );
 };

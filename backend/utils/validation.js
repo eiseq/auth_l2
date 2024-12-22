@@ -36,4 +36,4 @@ const validateFields = (formData) => {
     return errors;
 };
 
-module.exports = validateFields;
+module.exports = { validateFields };

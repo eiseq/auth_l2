@@ -78,6 +78,7 @@ body {
 .btn--secondary {
     background-color: #6c757d;
     margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .btn--secondary:hover {
