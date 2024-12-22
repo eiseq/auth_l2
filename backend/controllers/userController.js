@@ -1,14 +1,21 @@
 const { doc, getDoc, updateDoc } = require('firebase/firestore');
-const { db } = require('../config/firebaseConfig');
+const { auth, db } = require('../config/firebaseConfig');
 const { validateFields } = require('../utils/validation');
 
 const getUserData = async (req, res) => {
     try {
         const { id } = req.params;
+        const uid = req.headers.authorization?.split(' ')[1];
+        if (!uid) {
+            return res.status(401).json({ error: 'Unauthorized: No UID provided' });
+        }
         const userDoc = await getDoc(doc(db, 'users', id));
 
         if (userDoc.exists()) {
             const userData = { id: userDoc.id, ...userDoc.data() };
+            if (auth.currentUser?.uid !== uid) {
+                return res.status(403).json({ error: 'Unauthorized: You do not have access to this user data' });
+            }
             res.status(200).json(userData);
         } else {
             res.status(404).json({ error: 'User not found' });
@@ -20,7 +27,11 @@ const getUserData = async (req, res) => {
 
 const updateUserData = async (req, res) => {
     try {
-        const { id, field, value } = req.body;
+        const { id, field, value, uid } = req.body;
+        const authUid = req.headers.authorization?.split(' ')[1];
+        if (!authUid) {
+            return res.status(401).json({ error: 'Unauthorized: No UID provided' });
+        }
         const validationErrors = validateFields({ [field]: value });
 
         if (Object.keys(validationErrors).length > 0) {
@@ -30,6 +41,9 @@ const updateUserData = async (req, res) => {
         const userDoc = await getDoc(doc(db, 'users', id));
 
         if (userDoc.exists()) {
+            if (auth.currentUser?.uid !== authUid) {
+                return res.status(403).json({ error: 'Unauthorized: You do not have access to this user data' });
+            }
             await updateDoc(doc(db, 'users', id), {
                 [field]: value,
             });
