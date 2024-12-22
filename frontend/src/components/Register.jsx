@@ -3,6 +3,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import { validateFields, generateRandomPassword, uploadImage } from '../utils';
+import { useNavigate } from 'react-router-dom';
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
@@ -18,6 +19,7 @@ const Register = () => {
         avatar: null,
     });
     const [errors, setErrors] = useState({});
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -59,7 +61,7 @@ const Register = () => {
                 avatar: avatarUrl,
             });
 
-            alert('Registration successful');
+            navigate('/', { state: { avatarUrl } });
         } catch (error) {
             alert('Error registering user: ' + error.message);
         }
