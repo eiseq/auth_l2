@@ -136,3 +136,18 @@ body {
     border-radius: 50%;
     margin-top: 10px;
 }
+
+.btn--logout {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.btn--logout:hover {
+    background-color: #ff4d4d;
+}
