@@ -2,7 +2,9 @@ const { createUserWithEmailAndPassword } = require('firebase/auth');
 const { doc, setDoc } = require('firebase/firestore');
 const { auth, db } = require('../config/firebaseConfig');
 const { uploadImage } = require('../utils/uploadImage');
-const { validateFields } = require('../utils/validation.js');
+const { validateFields } = require('../utils/validation');
+
+let userIdCounter = 1;
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
@@ -10,7 +12,7 @@ const registerUser = async (req, res) => {
     const { email, password, name, nickname, phone, gender } = req.body;
     const avatar = req.file;
 
-    const validationErrors = validateFields(req.body);
+    const validationErrors = validateFields({ email, password, name, nickname, phone, gender });
     if (Object.keys(validationErrors).length > 0) {
         return res.status(400).json({ error: 'Validation failed', details: validationErrors });
     }
@@ -24,7 +26,9 @@ const registerUser = async (req, res) => {
             avatarUrl = await uploadImage(avatar);
         }
 
-        await setDoc(doc(db, 'users', user.uid), {
+        await setDoc(doc(db, 'users', userIdCounter.toString()), {
+            id: userIdCounter,
+            email,
             name,
             nickname,
             phone,
@@ -32,7 +36,8 @@ const registerUser = async (req, res) => {
             avatar: avatarUrl,
         });
 
-        res.status(201).json({ message: 'Registration successful' });
+        res.status(201).json({ message: 'Registration successful', userId: userIdCounter });
+        userIdCounter++;
     } catch (error) {
         res.status(500).json({ error: 'Error registering user', details: error.message });
     }
