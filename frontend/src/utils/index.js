@@ -52,14 +52,3 @@ export const generateRandomPassword = (length) => {
     }
     return password;
 };
-
-export const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
-        params: {
-            key: 'YOUR_IMGBB_API_KEY',
-        },
-    });
-    return response.data.data.url;
-};
