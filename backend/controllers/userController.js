@@ -3,10 +3,10 @@ const { db } = require('../config/firebaseConfig');
 const { validateFields } = require('../utils/validation');
 
 const getUserData = async (req, res) => {
-    const { id } = req.params;
-
     try {
+        const { id } = req.params;
         const userDoc = await getDoc(doc(db, 'users', id.toString()));
+
         if (userDoc.exists()) {
             const userData = userDoc.data();
             res.status(200).json(userData);
@@ -19,15 +19,16 @@ const getUserData = async (req, res) => {
 };
 
 const updateUserData = async (req, res) => {
-    const { id, field, value } = req.body;
-
-    const validationErrors = validateFields({ [field]: value });
-    if (Object.keys(validationErrors).length > 0) {
-        return res.status(400).json({ error: 'Validation failed', details: validationErrors });
-    }
-
     try {
+        const { id, field, value } = req.body;
+        const validationErrors = validateFields({ [field]: value });
+
+        if (Object.keys(validationErrors).length > 0) {
+            return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+        }
+
         const userDoc = await getDoc(doc(db, 'users', id.toString()));
+
         if (userDoc.exists()) {
             await updateDoc(doc(db, 'users', id.toString()), {
                 [field]: value,
