@@ -1,5 +1,8 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const dotenv = require('dotenv');
+
+dotenv.config()
 
 const uploadImage = async (file) => {
     const formData = new FormData();
