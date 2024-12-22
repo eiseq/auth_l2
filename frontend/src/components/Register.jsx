@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { validateFields, generateRandomPassword } from '../utils';
 import '../assets/styles/global.css';
+import { getAuth } from 'firebase/auth';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -56,13 +57,18 @@ const Register = () => {
             gender,
             avatar: avatar ? avatar.name : null
         }
-        console.log(dataToSend)
+
         try {
             const response = await axios.post('http://localhost:5000/api/auth/register', dataToSend, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user) {
+                localStorage.setItem('uid', user.uid);
+            }
             navigate(`/profile/${response.data.userId}`);
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
