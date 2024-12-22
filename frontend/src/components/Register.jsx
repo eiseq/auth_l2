@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { validateFields, generateRandomPassword } from '../utils';
 import '../assets/styles/global.css';
 
 const Register = () => {
@@ -27,12 +28,7 @@ const Register = () => {
     };
 
     const handleGeneratePassword = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_.:;';
-        let password = '';
-        const length = 16;
-        for (let i = 0; i < length; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        const password = generateRandomPassword(16);
         setFormData({ ...formData, password, confirmPassword: password });
     };
 
@@ -41,6 +37,12 @@ const Register = () => {
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
+            return;
+        }
+
+        const validationErrors = validateFields(formData);
+        if (Object.keys(validationErrors).length > 0) {
+            setError(Object.values(validationErrors).join(', '));
             return;
         }
 
@@ -56,12 +58,12 @@ const Register = () => {
         }
 
         try {
-            await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
+            const response = await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            navigate('/');
+            navigate(`/profile/${response.data.userId}`);
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
                 setError(Object.values(error.response.data.details).join(', '));

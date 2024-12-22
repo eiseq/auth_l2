@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { validateFields } from '../utils';
 import '../assets/styles/global.css';
 
 const UserProfile = () => {
@@ -8,6 +9,7 @@ const UserProfile = () => {
     const [userData, setUserData] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [newValue, setNewValue] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -25,10 +27,17 @@ const UserProfile = () => {
     const handleEditClick = (field) => {
         setEditingField(field);
         setNewValue(userData[field]);
+        setError('');
     };
 
     const handleSaveClick = async () => {
         if (!editingField || !newValue) return;
+
+        const validationErrors = validateFields({ [editingField]: newValue });
+        if (Object.keys(validationErrors).length > 0) {
+            setError(Object.values(validationErrors).join(', '));
+            return;
+        }
 
         try {
             const response = await axios.post('http://localhost:5000/api/auth/update-user', {
@@ -39,8 +48,13 @@ const UserProfile = () => {
             setUserData({ ...userData, [editingField]: newValue });
             setEditingField(null);
             setNewValue('');
+            setError('');
         } catch (error) {
-            console.error('Error updating user data:', error);
+            if (error.response && error.response.data && error.response.data.details) {
+                setError(Object.values(error.response.data.details).join(', '));
+            } else {
+                setError('Error updating user data: ' + error.message);
+            }
         }
     };
 
@@ -51,6 +65,7 @@ const UserProfile = () => {
     return (
         <div className="user-profile">
             <h2 className="user-profile__title">User Profile</h2>
+            {error && <p className="register__error">{error}</p>}
             <div className="user-profile__field">
                 <label className="user-profile__label">Email:</label>
                 <span className="user-profile__value">{userData.email}</span>
