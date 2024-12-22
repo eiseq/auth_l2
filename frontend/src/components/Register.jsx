@@ -28,7 +28,7 @@ const Register = () => {
     };
 
     const handleGeneratePassword = () => {
-        const password = generateRandomPassword(8);
+        const password = generateRandomPassword(16);
         setFormData({ ...formData, password, confirmPassword: password });
     };
 
@@ -46,21 +46,21 @@ const Register = () => {
             return;
         }
 
-        const formDataToSend = new FormData();
-        formDataToSend.append('email', email);
-        formDataToSend.append('password', password);
-        formDataToSend.append('name', formData.name);
-        formDataToSend.append('nickname', formData.nickname);
-        formDataToSend.append('phone', formData.phone);
-        formDataToSend.append('gender', formData.gender);
-        if (formData.avatar) {
-            formDataToSend.append('avatar', formData.avatar);
+        const { name, nickname, phone, gender, avatar } = formData;
+        const dataToSend = {
+            email,
+            password,
+            name,
+            nickname,
+            phone,
+            gender,
+            avatar: avatar ? avatar.name : null
         }
-
+        console.log(dataToSend)
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
+            const response = await axios.post('http://localhost:5000/api/auth/register', dataToSend, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
             });
             navigate(`/profile/${response.data.userId}`);
