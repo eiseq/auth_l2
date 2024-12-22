@@ -5,10 +5,10 @@ const { validateFields } = require('../utils/validation');
 const getUserData = async (req, res) => {
     try {
         const { id } = req.params;
-        const userDoc = await getDoc(doc(db, 'users', id.toString()));
+        const userDoc = await getDoc(doc(db, 'users', id));
 
         if (userDoc.exists()) {
-            const userData = userDoc.data();
+            const userData = { id: userDoc.id, ...userDoc.data() };
             res.status(200).json(userData);
         } else {
             res.status(404).json({ error: 'User not found' });
@@ -27,10 +27,10 @@ const updateUserData = async (req, res) => {
             return res.status(400).json({ error: 'Validation failed', details: validationErrors });
         }
 
-        const userDoc = await getDoc(doc(db, 'users', id.toString()));
+        const userDoc = await getDoc(doc(db, 'users', id));
 
         if (userDoc.exists()) {
-            await updateDoc(doc(db, 'users', id.toString()), {
+            await updateDoc(doc(db, 'users', id), {
                 [field]: value,
             });
             res.status(200).json({ message: 'User data updated successfully' });
