@@ -8,6 +8,7 @@ const LogoutButton = () => {
 
     const handleLogout = async () => {
         try {
+            localStorage.clear();
             await axios.post('http://localhost:5000/api/auth/logout');
             navigate('/');
         } catch (error) {
