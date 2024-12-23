@@ -35,16 +35,10 @@ const UserProfile = () => {
     const handleSaveClick = async () => {
         if (!editingField || !newValue) return;
 
-        const formData = new FormData();
-        formData.append('uid', uid);
-        formData.append('field', editingField);
-        formData.append('value', newValue);
-
         try {
-            const response = await axios.post('/api/auth/update-user', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                }
+            const response = await axios.post(`/api/auth/update-user/${uid}`, {
+                field: editingField,
+                value: newValue,
             });
             setUserData({ ...userData, [editingField]: newValue });
             setEditingField(null);

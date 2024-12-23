@@ -1,6 +1,6 @@
 const { createUserWithEmailAndPassword, signInWithEmailAndPassword } = require('firebase/auth');
 const { auth, db, collection, getDocs, doc, setDoc, query, orderBy, limit } = require('../config/firebaseConfig');
-const { validateFields } = require('../utils/validation');
+const { validateField } = require('../utils/validation');
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
@@ -8,7 +8,7 @@ const registerUser = async (req, res) => {
     try {
         const { email, password, name, nickname, phone, gender, avatar } = req.body;
 
-        const validationErrors = validateFields({ email, password, name, nickname, phone, gender });
+        const validationErrors = validateField({ email, password, name, nickname, phone, gender });
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({ error: 'Validation failed', details: validationErrors });
         }
