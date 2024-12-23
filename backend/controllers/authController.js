@@ -1,15 +1,13 @@
 const { createUserWithEmailAndPassword } = require('firebase/auth');
-const { collection, addDoc } = require('firebase/firestore');
+const { collection, addDoc, query, orderBy, limit, getDocs } = require('firebase/firestore');
 const { auth, db } = require('../config/firebaseConfig');
-const { uploadImage } = require('../utils/uploadImage');
 const { validateFields } = require('../utils/validation');
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
 const registerUser = async (req, res) => {
     try {
-        const { email, password, name, nickname, phone, gender } = req.body;
-        const avatar = req.file;
+        const { email, password, name, nickname, phone, gender, avatar } = req.body;
 
         const validationErrors = validateFields({ email, password, name, nickname, phone, gender });
         if (Object.keys(validationErrors).length > 0) {
@@ -19,12 +17,20 @@ const registerUser = async (req, res) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        let avatarUrl = DEFAULT_AVATAR_URL;
-        if (avatar) {
-            avatarUrl = await uploadImage(avatar);
+        let avatarUrl = avatar || DEFAULT_AVATAR_URL;
+
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, orderBy('id', 'desc'), limit(1));
+        const querySnapshot = await getDocs(q);
+
+        let newUserId = 1;
+        if (!querySnapshot.empty) {
+            const lastUserDoc = querySnapshot.docs[0];
+            newUserId = lastUserDoc.data().id + 1;
         }
 
-        const userDocRef = await addDoc(collection(db, 'users'), {
+        await addDoc(collection(db, 'users'), {
+            id: newUserId,
             email,
             name,
             nickname,
@@ -33,7 +39,7 @@ const registerUser = async (req, res) => {
             avatar: avatarUrl,
         });
 
-        res.status(201).json({ message: 'Registration successful', userId: userDocRef.id });
+        res.status(201).json({ message: 'Registration successful', userId: newUserId });
     } catch (error) {
         res.status(500).json({ error: 'Error registering user', details: error.message });
     }
