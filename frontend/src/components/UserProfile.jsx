@@ -5,28 +5,18 @@ import LogoutButton from './LogoutButton';
 import '../assets/styles/global.css';
 
 const UserProfile = () => {
-    const { id } = useParams();
+    const { uid } = useParams();
     const navigate = useNavigate();
     const [userData, setUserData] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [newValue, setNewValue] = useState('');
     const [error, setError] = useState('');
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                if (token && userId) {
-                    const response = await axios.get(`http://localhost:5000/api/auth/user/${id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    setUserData(response.data);
-                } else {
-                    navigate('/register');
-                }
+                const response = await axios.get(`/api/auth/user/${uid}`);
+                setUserData(response.data);
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 setError('Error fetching user data');
@@ -34,41 +24,32 @@ const UserProfile = () => {
         };
 
         fetchUserData();
-    }, [id, token, userId, navigate]);
+    }, [uid]);
 
     const handleEditClick = (field) => {
-        if (token && userId) {
-            setEditingField(field);
-            setNewValue(userData[field]);
-            setError('');
-        } else {
-            navigate('/register');
-        }
+        setEditingField(field);
+        setNewValue(userData[field]);
+        setError('');
     };
 
     const handleSaveClick = async () => {
         if (!editingField || !newValue) return;
 
         const formData = new FormData();
-        formData.append('id', id);
+        formData.append('uid', uid);
         formData.append('field', editingField);
         formData.append('value', newValue);
 
         try {
-            if (token && userId) {
-                const response = await axios.post('http://localhost:5000/api/auth/update-user', formData, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data',
-                    }
-                });
-                setUserData({ ...userData, [editingField]: newValue });
-                setEditingField(null);
-                setNewValue('');
-                setError('');
-            } else {
-                navigate('/register');
-            }
+            const response = await axios.post('/api/auth/update-user', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+            setUserData({ ...userData, [editingField]: newValue });
+            setEditingField(null);
+            setNewValue('');
+            setError('');
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
                 setError(Object.values(error.response.data.details).join(', '));

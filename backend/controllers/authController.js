@@ -1,6 +1,5 @@
-const { createUserWithEmailAndPassword } = require('firebase/auth');
-const { collection, addDoc, query, orderBy, limit, getDocs, doc, setDoc } = require('firebase/firestore');
-const { auth, db } = require('../config/firebaseConfig');
+const { createUserWithEmailAndPassword, signInWithEmailAndPassword } = require('firebase/auth');
+const { auth, db, collection, getDocs, doc, setDoc, query, orderBy, limit } = require('../config/firebaseConfig');
 const { validateFields } = require('../utils/validation');
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
@@ -42,10 +41,26 @@ const registerUser = async (req, res) => {
 
         const idToken = await user.getIdToken();
 
-        res.status(201).json({ message: 'Registration successful', userId: newUserId, token: idToken });
+        res.status(201).json({ message: 'Registration successful', userId: user.uid, token: idToken });
     } catch (error) {
+        console.error('Error registering user:', error);
         res.status(500).json({ error: 'Error registering user', details: error.message });
     }
+
+
 };
 
-module.exports = { registerUser };
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        res.status(200).json({ message: 'Login successful', userId: user.uid });
+    } catch (error) {
+        console.error('Error logging in user:', error);
+        res.status(500).json({ error: 'Error logging in user', details: error.message });
+    }
+};
+module.exports = { registerUser, loginUser };

@@ -1,19 +1,22 @@
-const { auth } = require('../config/firebaseConfig');
+const { db, doc, getDoc } = require('../config/firebaseConfig');
 
-const authenticateToken = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ error: 'Unauthorized: No token provided' });
+const authenticateUid = async (req, res, next) => {
+    const { uid } = req.params;
+    if (!uid) {
+        return res.status(401).json({ error: 'Unauthorized: No uid provided' });
     }
 
     try {
-        const decodedToken = await auth.verifyIdToken(token);
-        req.user = decodedToken;
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (!userDoc.exists()) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        req.user = userDoc.data();
         next();
     } catch (error) {
-        console.error('Error verifying token:', error);
-        res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        console.error('Error verifying uid:', error);
+        res.status(401).json({ error: 'Unauthorized: Invalid uid' });
     }
 };
 
-module.exports = { authenticateToken };
+module.exports = { authenticateUid };

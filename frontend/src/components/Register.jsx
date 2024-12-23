@@ -58,6 +58,7 @@ const Register = () => {
     const handleRegister = async () => {
         const { email, password, confirmPassword, name, nickname, phone, gender, avatar } = formData;
 
+        // Проверка на заполненность всех полей
         if (!email || !password || !confirmPassword || !name || !nickname || !phone || !gender) {
             setError('All fields are required');
             return;
@@ -69,7 +70,7 @@ const Register = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/register', {
+            const response = await axios.post('/api/auth/register', {
                 email,
                 password,
                 name,
@@ -78,8 +79,7 @@ const Register = () => {
                 gender,
                 avatar,
             });
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('userId', response.data.userId);
+            localStorage.setItem('uid', response.data.userId);
             navigate(`/profile/${response.data.userId}`);
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
