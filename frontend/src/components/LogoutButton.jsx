@@ -8,8 +8,9 @@ const LogoutButton = () => {
 
     const handleLogout = async () => {
         try {
-            localStorage.clear();
             await axios.post('http://localhost:5000/api/auth/logout');
+            localStorage.removeItem('token');
+            localStorage.removeItem('uid');
             navigate('/');
         } catch (error) {
             console.error('Error logging out:', error);

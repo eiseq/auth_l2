@@ -76,6 +76,7 @@ const Register = () => {
             const user = auth.currentUser;
             if (user) {
                 localStorage.setItem('uid', user.uid);
+                localStorage.setItem('token', response.data.token);
             }
             navigate(`/profile/${response.data.userId}`);
         } catch (error) {
