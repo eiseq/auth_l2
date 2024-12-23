@@ -27,7 +27,7 @@ const getUserData = async (req, res) => {
 
 const updateUserData = async (req, res) => {
     try {
-        const { id, field, value, uid } = req.body;
+        const { id, field, value } = req.body;
         const authUid = req.headers.authorization?.split(' ')[1];
         if (!authUid) {
             return res.status(401).json({ error: 'Unauthorized: No UID provided' });

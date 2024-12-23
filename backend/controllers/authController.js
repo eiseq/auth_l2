@@ -1,5 +1,5 @@
 const { createUserWithEmailAndPassword } = require('firebase/auth');
-const { doc, setDoc, collection, addDoc } = require('firebase/firestore');
+const { collection, addDoc } = require('firebase/firestore');
 const { auth, db } = require('../config/firebaseConfig');
 const { uploadImage } = require('../utils/uploadImage');
 const { validateFields } = require('../utils/validation');
