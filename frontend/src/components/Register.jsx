@@ -93,7 +93,7 @@ const Register = () => {
 
         const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
             params: {
-                key: import.meta.env.REACT_APP_IMGBB_API_KEY,
+                key: b11f587d6a00bdf63d5f388f3d692705,
             },
             headers: {
                 'Content-Type': 'multipart/form-data',
