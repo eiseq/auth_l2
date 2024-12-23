@@ -1,26 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import '../assets/styles/global.css';
 
 const LogoutButton = () => {
     const navigate = useNavigate();
 
-    const handleLogout = async () => {
-        try {
-            await axios.post('http://localhost:5000/api/auth/logout');
-            localStorage.removeItem('token');
-            localStorage.removeItem('uid');
-            navigate('/');
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        navigate('/register');
     };
 
     return (
-        <button className="btn btn--logout" onClick={handleLogout}>
-            Logout
-        </button>
+        <button className="btn" onClick={handleLogout}>Logout</button>
     );
 };
 
