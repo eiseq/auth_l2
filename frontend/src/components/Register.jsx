@@ -48,20 +48,21 @@ const Register = () => {
         }
 
         const { name, nickname, phone, gender, avatar } = formData;
-        const dataToSend = {
-            email,
-            password,
-            name,
-            nickname,
-            phone,
-            gender,
-            avatar: avatar ? avatar.name : null
+        const dataToSend = new FormData();
+        dataToSend.append('email', email);
+        dataToSend.append('password', password);
+        dataToSend.append('name', name);
+        dataToSend.append('nickname', nickname);
+        dataToSend.append('phone', phone);
+        dataToSend.append('gender', gender);
+        if (avatar) {
+            dataToSend.append('avatar', avatar);
         }
 
         try {
             const response = await axios.post('http://localhost:5000/api/auth/register', dataToSend, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
             });
             const auth = getAuth();

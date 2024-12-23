@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { validateFields } from '../utils';
 import LogoutButton from './LogoutButton';
 import '../assets/styles/global.css';

@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 export const validateFields = (formData) => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,10 +15,12 @@ export const validateFields = (formData) => {
         errors.password = 'Password must be at least 6 characters long';
     }
 
-    if (!formData.confirmPassword) {
-        errors.confirmPassword = 'Confirm Password is required';
-    } else if (formData.confirmPassword !== formData.password) {
-        errors.confirmPassword = 'Passwords do not match';
+    if (formData.confirmPassword !== undefined) {
+        if (!formData.confirmPassword) {
+            errors.confirmPassword = 'Confirm Password is required';
+        } else if (formData.confirmPassword !== formData.password) {
+            errors.confirmPassword = 'Passwords do not match';
+        }
     }
 
     if (!formData.name) {
