@@ -12,15 +12,16 @@ const UserProfile = () => {
     const [editingField, setEditingField] = useState(null);
     const [newValue, setNewValue] = useState('');
     const [error, setError] = useState('');
+    const token = localStorage.getItem('token');
     const uid = localStorage.getItem('uid');
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                if (uid !== null) {
+                if (token && uid) {
                     const response = await axios.get(`http://localhost:5000/api/auth/user/${id}`, {
                         headers: {
-                            'Authorization': `Bearer ${uid}`
+                            'Authorization': `Bearer ${token}`
                         }
                     });
                     setUserData(response.data);
@@ -33,10 +34,10 @@ const UserProfile = () => {
         };
 
         fetchUserData();
-    }, [id, uid, navigate]);
+    }, [id, token, uid, navigate]);
 
     const handleEditClick = (field) => {
-        if (uid !== null) {
+        if (token && uid) {
             setEditingField(field);
             setNewValue(userData[field]);
             setError('');
@@ -54,7 +55,7 @@ const UserProfile = () => {
             return;
         }
         try {
-            if (uid !== null) {
+            if (token && uid) {
                 const response = await axios.post('http://localhost:5000/api/auth/update-user', {
                     id,
                     field: editingField,
@@ -63,7 +64,7 @@ const UserProfile = () => {
                 },
                     {
                         headers: {
-                            'Authorization': `Bearer ${uid}`
+                            'Authorization': `Bearer ${token}`
                         }
                     });
                 setUserData({ ...userData, [editingField]: newValue });
