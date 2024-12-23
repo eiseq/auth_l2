@@ -11,13 +11,13 @@ const getUserData = async (req, res) => {
         }
 
         const decodedToken = await auth.verifyIdToken(token);
-        const uid = decodedToken.uid;
+        const userId = decodedToken.uid;
 
-        const userDoc = await getDoc(doc(db, 'users', id));
+        const userDoc = await getDoc(doc(db, 'users', userId));
 
         if (userDoc.exists()) {
-            const userData = { id: userDoc.id, ...userDoc.data() };
-            if (uid !== id) {
+            const userData = { id: userDoc.data().id, ...userDoc.data() };
+            if (userData.id.toString() !== id) {
                 return res.status(403).json({ error: 'Unauthorized: You do not have access to this user data' });
             }
             res.status(200).json(userData);
@@ -38,20 +38,20 @@ const updateUserData = async (req, res) => {
         }
 
         const decodedToken = await auth.verifyIdToken(token);
-        const uid = decodedToken.uid;
+        const userId = decodedToken.uid;
 
         const validationErrors = validateFields({ [field]: value });
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({ error: 'Validation failed', details: validationErrors });
         }
 
-        const userDoc = await getDoc(doc(db, 'users', id));
+        const userDoc = await getDoc(doc(db, 'users', userId));
 
         if (userDoc.exists()) {
-            if (uid !== id) {
+            if (userDoc.data().id.toString() !== id) {
                 return res.status(403).json({ error: 'Unauthorized: You do not have access to this user data' });
             }
-            await updateDoc(doc(db, 'users', id), {
+            await updateDoc(doc(db, 'users', userId), {
                 [field]: value,
             });
             res.status(200).json({ message: 'User data updated successfully' });
