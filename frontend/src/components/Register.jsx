@@ -14,7 +14,7 @@ const Register = () => {
         nickname: '',
         phone: '',
         gender: '',
-        avatar: '',
+        avatar: null,
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -22,6 +22,15 @@ const Register = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && isValidImageFile(file)) {
+            setFormData({ ...formData, avatar: file });
+        } else {
+            setError('Invalid file type. Please upload a valid image file.');
+        }
     };
 
     const handleGeneratePassword = () => {
@@ -42,6 +51,11 @@ const Register = () => {
             return;
         }
 
+        let avatarUrl = '';
+        if (avatar) {
+            avatarUrl = await uploadImageToImgbb(avatar);
+        }
+
         const dataToSend = {
             email,
             password,
@@ -49,7 +63,7 @@ const Register = () => {
             nickname,
             phone,
             gender,
-            avatar,
+            avatar: avatarUrl,
         };
 
         try {
@@ -71,6 +85,28 @@ const Register = () => {
                 setError('Error registering user: ' + error.message);
             }
         }
+    };
+
+    const uploadImageToImgbb = async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
+            params: {
+                key: import.meta.env.REACT_APP_IMGBB_API_KEY,
+            },
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        return response.data.data.url;
+    };
+
+    const isValidImageFile = (file) => {
+        const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        return validExtensions.includes(fileExtension);
     };
 
     return (
@@ -112,8 +148,8 @@ const Register = () => {
                 </select>
             </div>
             <div className="form-group">
-                <label className="form-group__label" htmlFor="avatar">Avatar URL</label>
-                <input className="form-group__input" type="text" id="avatar" name="avatar" value={formData.avatar} onChange={handleChange} />
+                <label className="form-group__label" htmlFor="avatar">Avatar</label>
+                <input className="form-group__input" type="file" id="avatar" onChange={handleFileChange} />
             </div>
             <button className="btn" onClick={handleRegister}>Register</button>
         </div>
