@@ -1,8 +1,7 @@
 const { createUserWithEmailAndPassword } = require('firebase/auth');
-const { collection, addDoc, query, orderBy, limit, getDocs } = require('firebase/firestore');
+const { collection, addDoc, query, orderBy, limit, getDocs, doc, setDoc } = require('firebase/firestore');
 const { auth, db } = require('../config/firebaseConfig');
 const { validateFields } = require('../utils/validation');
-const { uploadImage } = require('../utils/uploadImage');
 
 const DEFAULT_AVATAR_URL = 'https://i.ibb.co/gjgSdCw/avatar.png';
 
@@ -18,10 +17,7 @@ const registerUser = async (req, res) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        let avatarUrl = DEFAULT_AVATAR_URL;
-        if (avatar) {
-            avatarUrl = await uploadImage(avatar);
-        }
+        const avatarUrl = avatar || DEFAULT_AVATAR_URL;
 
         const usersRef = collection(db, 'users');
         const q = query(usersRef, orderBy('id', 'desc'), limit(1));
@@ -33,8 +29,9 @@ const registerUser = async (req, res) => {
             newUserId = lastUserDoc.data().id + 1;
         }
 
-        await addDoc(collection(db, 'users'), {
+        await setDoc(doc(db, 'users', user.uid), {
             id: newUserId,
+            userId: user.uid,
             email,
             name,
             nickname,
