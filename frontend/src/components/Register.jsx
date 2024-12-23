@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { validateFields, generateRandomPassword } from '../utils';
+import { generateRandomPassword } from '../utils';
 import '../assets/styles/global.css';
 import { getAuth } from 'firebase/auth';
 
@@ -14,7 +14,7 @@ const Register = () => {
         nickname: '',
         phone: '',
         gender: '',
-        avatar: null,
+        avatar: '',
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -24,45 +24,38 @@ const Register = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleFileChange = (e) => {
-        setFormData({ ...formData, avatar: e.target.files[0] });
-    };
-
     const handleGeneratePassword = () => {
         const password = generateRandomPassword(16);
         setFormData({ ...formData, password, confirmPassword: password });
     };
 
     const handleRegister = async () => {
-        const { email, password, confirmPassword } = formData;
+        const { email, password, confirmPassword, name, nickname, phone, gender, avatar } = formData;
+
+        if (!email || !password || !confirmPassword || !name || !nickname || !phone || !gender) {
+            setError('All fields are required');
+            return;
+        }
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
         }
 
-        const validationErrors = validateFields(formData);
-        if (Object.keys(validationErrors).length > 0) {
-            setError(Object.values(validationErrors).join(', '));
-            return;
-        }
-
-        const { name, nickname, phone, gender, avatar } = formData;
-        const dataToSend = new FormData();
-        dataToSend.append('email', email);
-        dataToSend.append('password', password);
-        dataToSend.append('name', name);
-        dataToSend.append('nickname', nickname);
-        dataToSend.append('phone', phone);
-        dataToSend.append('gender', gender);
-        if (avatar) {
-            dataToSend.append('avatar', avatar);
-        }
+        const dataToSend = {
+            email,
+            password,
+            name,
+            nickname,
+            phone,
+            gender,
+            avatar,
+        };
 
         try {
             const response = await axios.post('http://localhost:5000/api/auth/register', dataToSend, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
             });
             const auth = getAuth();
@@ -119,8 +112,8 @@ const Register = () => {
                 </select>
             </div>
             <div className="form-group">
-                <label className="form-group__label" htmlFor="avatar">Avatar</label>
-                <input className="form-group__input" type="file" id="avatar" onChange={handleFileChange} />
+                <label className="form-group__label" htmlFor="avatar">Avatar URL</label>
+                <input className="form-group__input" type="text" id="avatar" name="avatar" value={formData.avatar} onChange={handleChange} />
             </div>
             <button className="btn" onClick={handleRegister}>Register</button>
         </div>
