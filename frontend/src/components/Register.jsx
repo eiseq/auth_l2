@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { generateRandomPassword } from '../utils';
+import { generateRandomPassword } from '../utils/generateRandomPassword';
 import '../assets/styles/global.css';
 
 const Register = () => {
@@ -13,7 +13,7 @@ const Register = () => {
         nickname: '',
         phone: '',
         gender: '',
-        avatar: null,
+        avatar: '',
     });
     const [error, setError] = useState('');
     const [previewUrl, setPreviewUrl] = useState('');
@@ -24,15 +24,27 @@ const Register = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (file && isValidImageFile(file)) {
-            setFormData({ ...formData, avatar: file });
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
+                    params: {
+                        key: process.env.REACT_APP_IMGBB_API_KEY,
+                    },
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                setFormData({ ...formData, avatar: response.data.data.url });
+                setPreviewUrl(response.data.data.url);
+            } catch (error) {
+                setError('Error uploading image: ' + error.message);
+            }
         } else {
             setError('Invalid file type. Please upload a valid image file.');
         }
@@ -56,25 +68,18 @@ const Register = () => {
             return;
         }
 
-        const formDataToSend = new FormData();
-        formDataToSend.append('email', email);
-        formDataToSend.append('password', password);
-        formDataToSend.append('name', name);
-        formDataToSend.append('nickname', nickname);
-        formDataToSend.append('phone', phone);
-        formDataToSend.append('gender', gender);
-        if (avatar) {
-            formDataToSend.append('avatar', avatar);
-        }
-
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            const response = await axios.post('http://localhost:5000/api/auth/register', {
+                email,
+                password,
+                name,
+                nickname,
+                phone,
+                gender,
+                avatar,
             });
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('uid', response.data.userId);
+            localStorage.setItem('userId', response.data.userId);
             navigate(`/profile/${response.data.userId}`);
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {

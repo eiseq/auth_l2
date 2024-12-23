@@ -12,12 +12,12 @@ const UserProfile = () => {
     const [newValue, setNewValue] = useState('');
     const [error, setError] = useState('');
     const token = localStorage.getItem('token');
-    const uid = localStorage.getItem('uid');
+    const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                if (token && uid) {
+                if (token && userId) {
                     const response = await axios.get(`http://localhost:5000/api/auth/user/${id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -25,23 +25,24 @@ const UserProfile = () => {
                     });
                     setUserData(response.data);
                 } else {
-                    navigate('/register')
+                    navigate('/register');
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
+                setError('Error fetching user data');
             }
         };
 
         fetchUserData();
-    }, [id, token, uid, navigate]);
+    }, [id, token, userId, navigate]);
 
     const handleEditClick = (field) => {
-        if (token && uid) {
+        if (token && userId) {
             setEditingField(field);
             setNewValue(userData[field]);
             setError('');
         } else {
-            navigate('/register')
+            navigate('/register');
         }
     };
 
@@ -54,7 +55,7 @@ const UserProfile = () => {
         formData.append('value', newValue);
 
         try {
-            if (token && uid) {
+            if (token && userId) {
                 const response = await axios.post('http://localhost:5000/api/auth/update-user', formData, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
