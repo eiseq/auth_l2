@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { validateFields } from '../utils';
 import LogoutButton from './LogoutButton';
 import '../assets/styles/global.css';
 
@@ -49,24 +48,19 @@ const UserProfile = () => {
     const handleSaveClick = async () => {
         if (!editingField || !newValue) return;
 
-        const validationErrors = validateFields({ [editingField]: newValue });
-        if (Object.keys(validationErrors).length > 0) {
-            setError(Object.values(validationErrors).join(', '));
-            return;
-        }
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('field', editingField);
+        formData.append('value', newValue);
+
         try {
             if (token && uid) {
-                const response = await axios.post('http://localhost:5000/api/auth/update-user', {
-                    id,
-                    field: editingField,
-                    value: newValue,
-                    uid
-                },
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
+                const response = await axios.post('http://localhost:5000/api/auth/update-user', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data',
+                    }
+                });
                 setUserData({ ...userData, [editingField]: newValue });
                 setEditingField(null);
                 setNewValue('');

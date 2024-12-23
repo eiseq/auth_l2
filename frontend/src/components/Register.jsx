@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { generateRandomPassword } from '../utils';
 import '../assets/styles/global.css';
-import { getAuth } from 'firebase/auth';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -17,6 +16,7 @@ const Register = () => {
         avatar: null,
     });
     const [error, setError] = useState('');
+    const [previewUrl, setPreviewUrl] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -28,6 +28,11 @@ const Register = () => {
         const file = e.target.files[0];
         if (file && isValidImageFile(file)) {
             setFormData({ ...formData, avatar: file });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
         } else {
             setError('Invalid file type. Please upload a valid image file.');
         }
@@ -51,33 +56,25 @@ const Register = () => {
             return;
         }
 
-        let avatarUrl = '';
+        const formDataToSend = new FormData();
+        formDataToSend.append('email', email);
+        formDataToSend.append('password', password);
+        formDataToSend.append('name', name);
+        formDataToSend.append('nickname', nickname);
+        formDataToSend.append('phone', phone);
+        formDataToSend.append('gender', gender);
         if (avatar) {
-            avatarUrl = await uploadImageToImgbb(avatar);
+            formDataToSend.append('avatar', avatar);
         }
 
-        const dataToSend = {
-            email,
-            password,
-            name,
-            nickname,
-            phone,
-            gender,
-            avatar: avatarUrl,
-        };
-
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/register', dataToSend, {
+            const response = await axios.post('http://localhost:5000/api/auth/register', formDataToSend, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
             });
-            const auth = getAuth();
-            const user = auth.currentUser;
-            if (user) {
-                localStorage.setItem('uid', user.uid);
-                localStorage.setItem('token', response.data.token);
-            }
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('uid', response.data.userId);
             navigate(`/profile/${response.data.userId}`);
         } catch (error) {
             if (error.response && error.response.data && error.response.data.details) {
@@ -86,22 +83,6 @@ const Register = () => {
                 setError('Error registering user: ' + error.message);
             }
         }
-    };
-
-    const uploadImageToImgbb = async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
-            params: {
-                key: b11f587d6a00bdf63d5f388f3d692705,
-            },
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-
-        return response.data.data.url;
     };
 
     const isValidImageFile = (file) => {
@@ -151,6 +132,7 @@ const Register = () => {
             <div className="form-group">
                 <label className="form-group__label" htmlFor="avatar">Avatar</label>
                 <input className="form-group__input" type="file" id="avatar" onChange={handleFileChange} />
+                {previewUrl && <img src={previewUrl} alt="Preview" style={{ marginTop: '10px', width: '100px', height: '100px', borderRadius: '50%' }} />}
             </div>
             <button className="btn" onClick={handleRegister}>Register</button>
         </div>
